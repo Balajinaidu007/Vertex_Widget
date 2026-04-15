@@ -40,22 +40,22 @@ function executeWidgetCode() {
                 }
 
                 const apiBtn = document.getElementById("callApiBtn");
-                if (apiBtn) {
-                    apiBtn.onclick = function () {
-                        if (confirm("Send " + obj.data.items[0].displayName + " to Vertex?")) {
-                            var url = "https://www.plmtrainer.com:444/Vertex-0.0.1-SNAPSHOT/vertexvis/v1/exportdata?id=" + obj.data.items[0].objectId;
-                            fetch(url, { method: "GET" })
-                            .then(res => res.json())
-                            .then(data => {
-                                const formattedSummary = data["Summary Lines"].replace(/\n/g, "<br>");
-                                document.getElementById("apiResult").innerHTML = "<div class='success-box'>" + formattedSummary + "</div>";
-                            })
-                            .catch(err => {
-                                document.getElementById("apiResult").innerHTML = "<p class='error-text'>Error: " + err.message + "</p>";
-                            });
-                        }
-                    };
-                }
+              //  if (apiBtn) {
+               //     apiBtn.onclick = function () {
+                //        if (confirm("Send " + obj.data.items[0].displayName + " to Vertex?")) {
+                  //          var url = "https://www.plmtrainer.com:444/Vertex-0.0.1-SNAPSHOT/vertexvis/v1/exportdata?id=" + obj.data.items[0].objectId;
+                  //          fetch(url, { method: "GET" })
+                   //         .then(res => res.json())
+                   //         .then(data => {
+                    //            const formattedSummary = data["Summary Lines"].replace(/\n/g, "<br>");
+                    //            document.getElementById("apiResult").innerHTML = "<div class='success-box'>" + formattedSummary + "</div>";
+                    //        })
+                     //       .catch(err => {
+                     //           document.getElementById("apiResult").innerHTML = "<p class='error-text'>Error: " + err.message + "</p>";
+                    //        });
+                    //    }
+                  //  };
+                //}
             },
 
             onLoad: function() {
