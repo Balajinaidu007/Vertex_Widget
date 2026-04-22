@@ -4,10 +4,11 @@ function executeWidgetCode() {
 
         var myWidget = {
 
-            selectedItemId: null,
-
-            // 🔹 HARD-CODE YOUR STREAM KEY HERE
+            // 🔥 REPLACE THESE
             STREAM_KEY: "tlnqapBHDN4zsGNcVkDfe9XesQ4BBrRl8yAd",
+            CLIENT_ID: "08F675C4AACE8C0214362DB5EFD4FACAFA556D463ECA00877CB225157EF58BFA",
+
+            selectedItemId: null,
 
             displayData: function (obj) {
 
@@ -17,16 +18,15 @@ function executeWidgetCode() {
                 dropZoneUI.style.display = "none";
                 contentDiv.style.display = "block";
 
-                console.log("Dropped Object:", obj);
+                console.log("Dropped:", obj);
 
-                // ✅ Validation
+                // ✅ Validate object
                 if (!obj.data || !obj.data.items || obj.data.items.length === 0 ||
                     obj.data.items[0].objectType !== "VPMReference") {
 
                     contentDiv.innerHTML = `
-                        <div class="data-card error-state">
-                            <h4>Invalid Selection</h4>
-                            <p>Please drop a VPMReference Product.</p>
+                        <div>
+                            <h3>Invalid Selection</h3>
                             <button onclick="location.reload()">Back</button>
                         </div>`;
                     return;
@@ -34,29 +34,28 @@ function executeWidgetCode() {
 
                 const item = obj.data.items[0];
 
-                // ✅ Viewer UI directly
+                // ✅ Inject Viewer
                 contentDiv.innerHTML = `
-                    <div class="data-card">
-                        <div class="card-header">
-                            <h3>${item.displayName}</h3>
-                            <button onclick="location.reload()">Reset</button>
-                        </div>
+                    <div>
+                        <h3>${item.displayName}</h3>
+                        <button onclick="location.reload()">Reset</button>
 
-                        <div class="card-body" style="height:500px;">
+                        <div class="viewer-container">
                             <vertex-viewer 
                                 id="vertexViewer"
                                 style="width:100%; height:100%;"
-                                client-id="08F675C4AACE8C0214362DB5EFD4FACAFA556D463ECA00877CB225157EF58BFA"
+                                client-id="${myWidget.CLIENT_ID}">
                             </vertex-viewer>
                         </div>
                     </div>
                 `;
 
-                // 🔹 Load viewer immediately
-                myWidget.loadViewer();
+                // 🔥 Load viewer safely
+                setTimeout(() => {
+                    myWidget.loadViewer();
+                }, 500);
             },
 
-            // ✅ Load Vertex Viewer with hardcoded stream key
             loadViewer: async function () {
 
                 const viewer = document.getElementById("vertexViewer");
@@ -69,21 +68,22 @@ function executeWidgetCode() {
                 try {
                     await customElements.whenDefined('vertex-viewer');
 
+                    console.log("Loading stream...");
+
                     await viewer.load(
                         `urn:vertex:stream-key:${myWidget.STREAM_KEY}`
                     );
 
                     console.log("Viewer loaded");
 
-                    myWidget.attachSelection(viewer);
+                    myWidget.enableSelection(viewer);
 
-                } catch (err) {
-                    console.error("Viewer Load Error:", err);
+                } catch (e) {
+                    console.error("Load error:", e);
                 }
             },
 
-            // ✅ Selection logic
-            attachSelection: function (viewer) {
+            enableSelection: function (viewer) {
 
                 viewer.addEventListener('tap', async (event) => {
 
@@ -117,7 +117,6 @@ function executeWidgetCode() {
                 });
             },
 
-            // ✅ Drag & Drop
             dragZone: function () {
 
                 var dropElement = widget.body;
