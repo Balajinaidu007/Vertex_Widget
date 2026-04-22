@@ -98,20 +98,23 @@ function executeWidgetCode() {
                 console.log("✅ Valid item:", item.displayName);
 
                 // ✅ Inject Viewer
-                contentDiv.innerHTML = `
-                    <div style="width:100%; height:100%;">
-                        <h3>${item.displayName}</h3>
-                        <button onclick="location.reload()">Reset</button>
+				contentDiv.innerHTML = `
+					<div style="width:100vw; height:100vh; display:flex; flex-direction:column;">
+        
+							<div style="padding:8px;">
+								<h4>${item.displayName}</h4>
+									<button onclick="location.reload()">Reset</button>
+							</div>
 
-                        <div style="width:100%; height:80vh;">
-                            <vertex-viewer 
-                                id="vertexViewer"
-                                style="width:100%; height:100%;"
-                                client-id="${myWidget.CLIENT_ID}">
-                            </vertex-viewer>
-                        </div>
-                    </div>
-                `;
+        <div style="flex:1;">
+            <vertex-viewer 
+                id="vertexViewer"
+                style="width:100%; height:100%;">
+            </vertex-viewer>
+        </div>
+
+    </div>
+`;
 
                 console.log("🧩 Viewer injected into DOM");
 
