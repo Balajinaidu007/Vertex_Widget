@@ -2,21 +2,18 @@ function executeWidgetCode() {
 
     console.log("🚀 Widget script started");
 
-    require(['DS/DataDragAndDrop/DataDragAndDrop'], function (DataDragAndDrop) {
-
-        console.log("📦 DataDragAndDrop loaded");
+    require([], function () {
 
         var myWidget = {
 
-            // 🔥 CONFIG
+            // 🔥 CONFIG (hardcoded)
             STREAM_KEY: "tlnqapBHDN4zsGNcVkDfe9XesQ4BBrRl8yAd",
             CLIENT_ID: "08F675C4AACE8C0214362DB5EFD4FACAFA556D463ECA00877CB225157EF58BFA",
 
-            selectedItemId: null,
-
-            // ✅ Load Vertex scripts once
+            // ✅ Load Vertex scripts
             loadVertexScripts: function () {
-                console.log("🔧 loadVertexScripts called");
+
+                console.log("🔧 Loading Vertex scripts...");
 
                 return new Promise((resolve) => {
 
@@ -26,85 +23,78 @@ function executeWidgetCode() {
                         return;
                     }
 
-                    console.log("⬇️ Loading Vertex CSS...");
                     const link = document.createElement("link");
                     link.rel = "stylesheet";
-                    link.href = "https://cdn.jsdelivr.net/npm/@vertexvis/viewer@0.23.x/dist/viewer/viewer.css";
+                    link.href =
+                        "https://cdn.jsdelivr.net/npm/@vertexvis/viewer@0.23.x/dist/viewer/viewer.css";
                     document.head.appendChild(link);
 
-                    console.log("⬇️ Loading Vertex JS module...");
                     const script = document.createElement("script");
                     script.type = "module";
+
                     script.innerHTML = `
                         import { defineCustomElements } from 'https://cdn.jsdelivr.net/npm/@vertexvis/viewer@0.23.x/dist/esm/loader.js';
+
                         window.defineVertex = async () => {
-                            console.log("⚙️ Defining custom elements...");
                             await defineCustomElements(window);
-                            console.log("✅ Custom elements defined");
+                            console.log("✅ Vertex custom elements defined");
                         };
                     `;
+
                     document.body.appendChild(script);
 
                     setTimeout(async () => {
-                        console.log("⏳ Waiting for defineVertex...");
-
                         if (window.defineVertex) {
                             await window.defineVertex();
                             window.vertexLoaded = true;
-                            console.log("✅ Vertex fully initialized");
                             resolve();
                         } else {
-                            console.error("❌ defineVertex not found");
+                            console.error("❌ Vertex init failed");
                         }
                     }, 500);
                 });
             },
 
-            // ✅ Display dropped data
-            displayData: function (obj) {
+            // ✅ Load viewer
+            loadViewer: async function () {
 
-                console.log("📥 displayData called");
-                console.log("📦 Dropped object:", obj);
+                console.log("🚀 loadViewer called");
 
-                var contentDiv = document.getElementById("content-display");
-                var dropZoneUI = document.getElementById("drop-zone-ui");
+                const viewer = document.getElementById("vertexViewer");
 
-                if (!contentDiv || !dropZoneUI) {
-                    console.error("❌ UI elements missing");
+                if (!viewer) {
+                    console.error("❌ vertexViewer not found");
                     return;
                 }
 
-                dropZoneUI.style.display = "none";
-                contentDiv.style.display = "block";
+                await myWidget.loadVertexScripts();
 
-                // ❌ Validation
-                if (!obj.data || !obj.data.items || obj.data.items.length === 0) {
-                    console.error("❌ Invalid data structure");
-                    return;
-                }
+                await customElements.whenDefined("vertex-viewer");
 
-                if (obj.data.items[0].objectType !== "VPMReference") {
-                    console.warn("⚠️ Not a VPMReference");
+                console.log("🌐 Loading stream:", myWidget.STREAM_KEY);
 
-                    contentDiv.innerHTML = `
-                        <div>
-                            <h3>Invalid Selection</h3>
-                            <button onclick="location.reload()">Back</button>
-                        </div>`;
-                    return;
-                }
+                await viewer.load(
+                    `urn:vertex:stream-key:${myWidget.STREAM_KEY}`
+                );
 
-                const item = obj.data.items[0];
-                console.log("✅ Valid item:", item.displayName);
+                console.log("🎉 Viewer loaded successfully");
+            },
 
-                // ✅ Inject Viewer
-                contentDiv.innerHTML = `
+            // ✅ Init
+            onLoad: function () {
+
+                console.log("📌 Widget onLoad triggered");
+
+                const content = document.getElementById("content-display");
+
+                content.innerHTML = `
                     <div style="width:100%; height:100%;">
-                        <h3>${item.displayName}</h3>
-                        <button onclick="location.reload()">Reset</button>
+                        <div style="padding:10px;">
+                            <h3>Vertex Viewer (Hardcoded)</h3>
+                        </div>
 
-                        <div style="width:100%; height:80vh;">
-                            <vertex-viewer 
+                        <div style="width:100%; height:90vh;">
+                            <vertex-viewer
                                 id="vertexViewer"
                                 style="width:100%; height:100%;"
                                 client-id="${myWidget.CLIENT_ID}">
@@ -113,136 +103,10 @@ function executeWidgetCode() {
                     </div>
                 `;
 
-                console.log("🧩 Viewer injected into DOM");
-
-                setTimeout(() => {
-                    console.log("⏳ Calling loadViewer...");
-                    myWidget.loadViewer();
-                }, 300);
-            },
-
-            // ✅ Load Viewer
-            loadViewer: async function () {
-
-                console.log("🚀 loadViewer called");
-
-                const viewer = document.getElementById("vertexViewer");
-
-                if (!viewer) {
-                    console.error("❌ Viewer element not found");
-                    return;
-                }
-
-                console.log("✅ Viewer element found");
-
-                try {
-                    await myWidget.loadVertexScripts();
-
-                    console.log("⏳ Waiting for custom element definition...");
-                    await customElements.whenDefined('vertex-viewer');
-
-                    console.log("✅ vertex-viewer defined");
-
-                    console.log("🌐 Loading stream:", myWidget.STREAM_KEY);
-
-                    await viewer.load(
-                        `urn:vertex:stream-key:${myWidget.STREAM_KEY}`
-                    );
-
-                    console.log("🎉 Viewer stream loaded successfully");
-
-                    myWidget.enableSelection(viewer);
-
-                } catch (e) {
-                    console.error("❌ Load error:", e);
-                }
-            },
-
-            // ✅ Enable selection
-            enableSelection: function (viewer) {
-
-                console.log("🖱️ Selection enabled");
-
-                viewer.addEventListener('tap', async (event) => {
-
-                    console.log("👆 Tap detected", event.detail.position);
-
-                    const scene = await viewer.scene();
-                    const raycaster = scene.raycaster();
-
-                    const result = await raycaster.hitItems(event.detail.position);
-                    console.log("🎯 Hit result:", result);
-
-                    const [hit] = result.hits;
-
-                    if (hit) {
-
-                        const itemId = hit.itemId?.hex;
-                        console.log("✅ Hit item:", itemId);
-
-                        await scene.items(op => [
-                            ...(myWidget.selectedItemId
-                                ? [op.where(q => q.withItemId(myWidget.selectedItemId)).deselect()]
-                                : []),
-                            op.where(q => q.withItemId(itemId)).select()
-                        ]).execute();
-
-                        myWidget.selectedItemId = itemId;
-
-                    } else if (myWidget.selectedItemId) {
-
-                        console.log("🔄 Deselecting previous item");
-
-                        await scene.items(op => [
-                            op.where(q => q.withItemId(myWidget.selectedItemId)).deselect()
-                        ]).execute();
-
-                        myWidget.selectedItemId = null;
-                    }
-                });
-            },
-
-            // ✅ Drag & Drop
-            dragZone: function () {
-
-                console.log("🧲 Drag zone initialized");
-
-                var dropElement = widget.body;
-
-                DataDragAndDrop.droppable(dropElement, {
-
-                    drop: function (data) {
-                        console.log("📥 Drop event triggered");
-
-                        try {
-                            var obj = JSON.parse(data);
-                            myWidget.displayData(obj);
-                        } catch (e) {
-                            console.error("❌ JSON parse error:", e);
-                        }
-
-                        widget.body.classList.remove("drag-over");
-                    },
-
-                    enter: function () {
-                        console.log("➡️ Drag enter");
-                        widget.body.classList.add("drag-over");
-                    },
-
-                    leave: function () {
-                        console.log("⬅️ Drag leave");
-                        widget.body.classList.remove("drag-over");
-                    }
-                });
-            },
-
-            // ✅ Init
-            onLoad: function () {
-                console.log("📌 Widget onLoad triggered");
-                myWidget.dragZone();
+                myWidget.loadViewer();
             }
         };
 
-        widget.addEvent('onLoad', myWidget.onLoad);
+        widget.addEvent("onLoad", myWidget.onLoad);
     });
 }
