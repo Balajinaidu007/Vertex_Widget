@@ -6,6 +6,9 @@ function executeWidgetCode() {
 
             selectedItemId: null,
 
+            // 🔹 HARD-CODE YOUR STREAM KEY HERE
+            STREAM_KEY: "tlnqapBHDN4zsGNcVkDfe9XesQ4BBrRl8yAd",
+
             displayData: function (obj) {
 
                 var contentDiv = document.getElementById("content-display");
@@ -31,7 +34,7 @@ function executeWidgetCode() {
 
                 const item = obj.data.items[0];
 
-                // ✅ UI with Viewer placeholder
+                // ✅ Viewer UI directly
                 contentDiv.innerHTML = `
                     <div class="data-card">
                         <div class="card-header">
@@ -39,78 +42,22 @@ function executeWidgetCode() {
                             <button onclick="location.reload()">Reset</button>
                         </div>
 
-                        <div class="card-body" style="height:400px;">
-                            <div id="viewerContainer" style="width:100%; height:100%; display:none;">
-                                <vertex-viewer 
-                                    id="vertexViewer"
-                                    style="width:100%; height:100%;"
-                                    client-id="YOUR_CLIENT_ID">
-                                </vertex-viewer>
-                            </div>
-
-                            <div id="loader" style="text-align:center; padding-top:120px;">
-                                <p>Ready to send data to Vertex</p>
-                            </div>
+                        <div class="card-body" style="height:500px;">
+                            <vertex-viewer 
+                                id="vertexViewer"
+                                style="width:100%; height:100%;"
+                                client-id="08F675C4AACE8C0214362DB5EFD4FACAFA556D463ECA00877CB225157EF58BFA"
+                            </vertex-viewer>
                         </div>
-
-                        <div class="card-footer">
-                            <button id="callApiBtn">Send To Vertex</button>
-                        </div>
-
-                        <div id="apiResult"></div>
                     </div>
                 `;
 
-                // ✅ Button click
-                document.getElementById("callApiBtn").onclick = () => {
-                    myWidget.callVertexAPI(item);
-                };
+                // 🔹 Load viewer immediately
+                myWidget.loadViewer();
             },
 
-            // ✅ API Call
-            callVertexAPI: function (item) {
-
-                if (!confirm("Send " + item.displayName + " to Vertex?")) return;
-
-                const loader = document.getElementById("loader");
-                const resultDiv = document.getElementById("apiResult");
-
-                loader.innerHTML = "<p>Sending data to Vertex...</p>";
-
-                const url = "https://www.plmtrainer.com:444/Vertex-0.0.1-SNAPSHOT/vertexvis/v1/exportdata?id=" + item.objectId;
-
-                fetch(url, { method: "GET" })
-                    .then(res => res.json())
-                    .then(data => {
-
-                        console.log("API Response:", data);
-
-                        // ✅ Expecting stream key from API
-                        const streamKey = data.streamKey || data["stream-key"];
-
-                        if (!streamKey) {
-                            throw new Error("Stream key not found in API response");
-                        }
-
-                        loader.style.display = "none";
-                        document.getElementById("viewerContainer").style.display = "block";
-
-                        myWidget.loadViewer(streamKey);
-
-                        if (data["Summary Lines"]) {
-                            const formatted = data["Summary Lines"].replace(/\n/g, "<br>");
-                            resultDiv.innerHTML = `<div class='success-box'>${formatted}</div>`;
-                        }
-
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        loader.innerHTML = "<p style='color:red;'>Error: " + err.message + "</p>";
-                    });
-            },
-
-            // ✅ Load Vertex Viewer
-            loadViewer: async function (streamKey) {
+            // ✅ Load Vertex Viewer with hardcoded stream key
+            loadViewer: async function () {
 
                 const viewer = document.getElementById("vertexViewer");
 
@@ -122,7 +69,9 @@ function executeWidgetCode() {
                 try {
                     await customElements.whenDefined('vertex-viewer');
 
-                    await viewer.load(`urn:vertex:stream-key:${streamKey}`);
+                    await viewer.load(
+                        `urn:vertex:stream-key:${myWidget.STREAM_KEY}`
+                    );
 
                     console.log("Viewer loaded");
 
@@ -168,7 +117,7 @@ function executeWidgetCode() {
                 });
             },
 
-            // ✅ Drag & Drop setup
+            // ✅ Drag & Drop
             dragZone: function () {
 
                 var dropElement = widget.body;
